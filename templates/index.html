@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoCLIP Predictor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .upload-form {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .predictions {
+            margin-top: 20px;
+        }
+        .prediction-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .prediction-item:last-child {
+            border-bottom: none;
+        }
+        .loading {
+            text-align: center;
+            display: none;
+        }
+        .error {
+            color: red;
+            text-align: center;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>GeoCLIP Location Predictor</h1>
+        
+        <div class="upload-form">
+            <form id="uploadForm">
+                <input type="file" id="imageInput" accept="image/*" required>
+                <button type="submit">Predict Location</button>
+            </form>
+        </div>
+
+        <div id="loading" class="loading">
+            Processing image...
+        </div>
+
+        <div id="error" class="error"></div>
+
+        <div id="predictions" class="predictions"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const predictions = document.getElementById('predictions');
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const fileInput = document.getElementById('imageInput');
+            formData.append('file', fileInput.files[0]);
+
+            // Reset display
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            predictions.innerHTML = '';
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Display predictions
+                    data.predictions.forEach((pred, index) => {
+                        const predDiv = document.createElement('div');
+                        predDiv.className = 'prediction-item';
+                        predDiv.innerHTML = `
+                            <h3>Prediction ${index + 1}</h3>
+                            <p>Location: (${pred.latitude.toFixed(6)}, ${pred.longitude.toFixed(6)})</p>
+                            <p>Probability: ${(pred.probability * 100).toFixed(2)}%</p>
+                        `;
+                        predictions.appendChild(predDiv);
+                    });
+                } else {
+                    error.textContent = data.error || 'An error occurred';
+                    error.style.display = 'block';
+                }
+            } catch (err) {
+                error.textContent = 'An error occurred while processing the request';
+                error.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+            }
+        };
+    </script>
+</body>
+</html>

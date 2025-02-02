@@ -7,11 +7,15 @@ A simple Python Flask file upload web app that uses GeoCLIP to predict the locat
 
 Install GeoCLIP via pip
 
-```pip install geoclip```
+```
+pip install geoclip
+```
 
 # Usage
 
-```python app.py```
+```
+python app.py
+```
 
 1. Navigate to http://localhost:5000
 2. Upload your image and predict the location
